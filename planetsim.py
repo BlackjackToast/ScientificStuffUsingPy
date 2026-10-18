@@ -1,9 +1,10 @@
 import pygame
+from pygame.locals import *
 import math
 pygame.init()
 
-WIDTH, HEIGHT =  800, 800
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+WIDTH, HEIGHT =  1080, 1920
+WIN = pygame.display.set_mode((WIDTH, HEIGHT), RESIZABLE)
 pygame.display.set_caption("Planet Simulation")
 
 WHITE = (255, 255, 255)
@@ -11,14 +12,18 @@ YELLOW = (255, 255, 0)
 BLUE = (100, 149, 237)
 RED = (188, 39, 50)
 DARK_GREY = (80, 78, 81)
+JUPITER_COLOUR = (252, 207, 3)
 
 FONT = pygame.font.SysFont("comicsans", 16)
 
 class Planet:
 	AU = 149.6e6 * 1000
 	G = 6.67428e-11
-	SCALE = 250 / AU  # 1AU = 100 pixels
-	TIMESTEP = 3600*24 # 1 day
+	SCALE = 100 / AU  # 1AU = 100 pixels
+	TIMESTEP = 3600 * 24 # 1 day
+	TIME_SCALE = 1
+
+	
 
 	def __init__(self, x, y, radius, color, mass):
 		self.x = x
@@ -81,13 +86,15 @@ class Planet:
 
 		self.x_vel += total_fx / self.mass * self.TIMESTEP
 		self.y_vel += total_fy / self.mass * self.TIMESTEP
-
-		self.x += self.x_vel * self.TIMESTEP
-		self.y += self.y_vel * self.TIMESTEP
+		dt = self.TIMESTEP * self.TIME_SCALE
+		self.x += self.x_vel * dt
+		self.y += self.y_vel * dt
 		self.orbit.append((self.x, self.y))
 
 
 def main():
+	global WIDTH, HEIGHT, WIN
+
 	run = True
 	clock = pygame.time.Clock()
 
@@ -106,9 +113,12 @@ def main():
 	venus = Planet(0.723 * Planet.AU, 0, 14, WHITE, 4.8685 * 10**24)
 	venus.y_vel = -35.02 * 1000
 
+	jupiter = Planet(5.2 * Planet.AU, 0, 13, JUPITER_COLOUR, 1.898 * 10**27 )
+	jupiter.y_vel = -13.08 * 1000
+
     
 
-	planets = [sun, earth, mars, mercury, venus]
+	planets = [sun, earth, mars, mercury, venus, jupiter]
 
 	while run:
 		clock.tick(60)
@@ -117,6 +127,9 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				run = False
+			elif event.type == pygame.VIDEORESIZE:
+				WIDTH, HEIGHT = event.w, event.h 
+				WIN = pygame.display.set_mode((WIDTH, HEIGHT), RESIZABLE)
 
 		for planet in planets:
 			planet.update_position(planets)
